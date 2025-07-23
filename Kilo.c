@@ -14,6 +14,13 @@
 
 #define KILO_VERSION "0.0.1"
 
+enum editorKey {
+    ARROW_LEFT = 'h',
+    ARROW_RIGHT = 'l',
+    ARROW_UP = 'k',
+    ARROW_DOWN = 'j'
+};
+
 /*** data ***/
 
 struct editorConfig {
@@ -55,13 +62,32 @@ void enableRawMode(){
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
-char editorReadKey(){
+char editorReadKey() {
     int nread;
     char c;
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
-	if(nread == -1 && errno != EAGAIN) die("read");
+	if (nread == -1 && errno != EAGAIN) die("read");
     }
-    return c;
+
+    if (c =='\x1b'){
+	char seq[3];
+
+	if(read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
+	if(read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
+
+	if (seq[0] == '[') {
+	    switch (seq[1]) {
+		case 'A': return ARROW_UP;
+		case 'B': return ARROW_DOWN;
+		case 'C': return ARROW_RIGHT;
+		case 'D': return ARROW_LEFT;
+	    }
+	}
+
+	return '\x1b';
+    } else {
+	return c;
+    }
 }
 
 int getCursorPosition(int *rows, int *cols){
@@ -170,16 +196,16 @@ void editorRefreshScreen(){
 
 void editorMoveCursor(char key){
     switch (key) {
-	case 'h':
+	case ARROW_LEFT:
 	E.cx--;
 	break;
-	case 'j':
+	case ARROW_UP:
 	E.cy--;
 	break;
-	case 'k':
+	case ARROW_DOWN:
 	E.cy++;
 	break;
-	case 'l':
+	case ARROW_RIGHT:
 	E.cx++;
 	break;
     }
@@ -195,10 +221,10 @@ void editorProcessKey(){
 	    exit(0);
 	    break;
 
-	case 'h':
-	case 'j':
-	case 'k':
-	case 'l':
+	case ARROW_LEFT:
+	case ARROW_DOWN:
+	case ARROW_UP:
+	case ARROW_RIGHT:
 	    editorMoveCursor(c);
 	    break;
     }
