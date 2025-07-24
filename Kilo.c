@@ -215,53 +215,29 @@ void editorRefreshScreen(){
 
 void editorMoveCursor(int key){
     switch (key) {
+	case move_left:
 	case ARROW_LEFT:
 	    if (E.cx != 0) {
 		E.cx--;
 	    }
 	    break;
+	case move_up:
 	case ARROW_UP:
 	    if (E.cy != 0) {
 		E.cy--;
 	    }
 	    break;
+	case move_down:
 	case ARROW_DOWN:
 	    if (E.cy != E.screenrows - 1) {
 		E.cy++;
 	    }
 	    break;
+	case move_right:
 	case ARROW_RIGHT:
 	    if (E.cx != E.screencols - 1) {
 		E.cx++;
 	    }
-	    break;
-	case move_left:
-	    if (E.cx != 0) {
-		E.cx--;
-	    }
-	    break;
-	case move_up:
-	    if (E.cy != 0) {
-		E.cy--;
-	    }
-	    break;
-	case move_down:
-	    if (E.cy != E.screenrows - 1) {
-		E.cy++;
-	    }
-	    break;
-	case move_right:
-	    if (E.cx != E.screencols - 1) {
-		E.cx++;
-	    }
-	    break;
-	case PAGE_UP:
-	    E.cx = 0;
-	    E.cy -= E.screenrows - 1;
-	    break;
-	case PAGE_DOWN:
-	    E.cx = 0;
-	    E.cy += E.screenrows - 1;
 	    break;
     }
 }
@@ -280,13 +256,20 @@ void editorProcessKey(){
 	case ARROW_DOWN:
 	case ARROW_UP:
 	case ARROW_RIGHT:
-	case PAGE_UP:
-	case PAGE_DOWN:
 	case move_up:
 	case move_down:
 	case move_left:
 	case move_right:
-	    editorMoveCursor(c);
+    editorMoveCursor(c);
+	    break;
+
+	case PAGE_UP:
+	case PAGE_DOWN:
+	    {
+	    int shmove_it = E.screenrows;
+	    while (shmove_it--)
+		editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+	    }
 	    break;
     }
 }
