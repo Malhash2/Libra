@@ -15,10 +15,19 @@
 #define KILO_VERSION "0.0.1"
 
 enum editorKey {
-    ARROW_LEFT = 'h',
-    ARROW_RIGHT = 'l',
-    ARROW_UP = 'k',
-    ARROW_DOWN = 'j'
+    ARROW_LEFT = 1000,
+    ARROW_RIGHT,
+    ARROW_UP,
+    ARROW_DOWN,
+    PAGE_UP,
+    PAGE_DOWN
+};
+
+enum charEditorKey {
+    move_up = 'k',
+    move_down = 'j',
+    move_left = 'h',
+    move_right = 'l'
 };
 
 /*** data ***/
@@ -62,7 +71,7 @@ void enableRawMode(){
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
-char editorReadKey() {
+int editorReadKey() {
     int nread;
     char c;
     while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
@@ -76,11 +85,21 @@ char editorReadKey() {
 	if(read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
 
 	if (seq[0] == '[') {
+	    if (seq[1] >= '0' && seq[1] <= '9') {
+		if (read(STDIN_FILENO, &seq[2], 1) != 1) return '\x1b';
+		if (seq[2] == '~'){
+		    switch (seq[1]) {
+			case '5': return PAGE_UP; 
+			case '6': return PAGE_DOWN;
+		    }
+		}
+	    } else {
 	    switch (seq[1]) {
 		case 'A': return ARROW_UP;
 		case 'B': return ARROW_DOWN;
 		case 'C': return ARROW_RIGHT;
 		case 'D': return ARROW_LEFT;
+	    }
 	    }
 	}
 
@@ -194,7 +213,7 @@ void editorRefreshScreen(){
 
 /*** input ***/
 
-void editorMoveCursor(char key){
+void editorMoveCursor(int key){
     switch (key) {
 	case ARROW_LEFT:
 	    if (E.cx != 0) {
@@ -216,11 +235,39 @@ void editorMoveCursor(char key){
 		E.cx++;
 	    }
 	    break;
+	case move_left:
+	    if (E.cx != 0) {
+		E.cx--;
+	    }
+	    break;
+	case move_up:
+	    if (E.cy != 0) {
+		E.cy--;
+	    }
+	    break;
+	case move_down:
+	    if (E.cy != E.screenrows - 1) {
+		E.cy++;
+	    }
+	    break;
+	case move_right:
+	    if (E.cx != E.screencols - 1) {
+		E.cx++;
+	    }
+	    break;
+	case PAGE_UP:
+	    E.cx = 0;
+	    E.cy -= E.screenrows - 1;
+	    break;
+	case PAGE_DOWN:
+	    E.cx = 0;
+	    E.cy += E.screenrows - 1;
+	    break;
     }
 }
 
 void editorProcessKey(){
-    char c = editorReadKey();
+    int c = editorReadKey();
 
     switch (c){
 	case CTRL_KEY('q'):
@@ -233,6 +280,12 @@ void editorProcessKey(){
 	case ARROW_DOWN:
 	case ARROW_UP:
 	case ARROW_RIGHT:
+	case PAGE_UP:
+	case PAGE_DOWN:
+	case move_up:
+	case move_down:
+	case move_left:
+	case move_right:
 	    editorMoveCursor(c);
 	    break;
     }
