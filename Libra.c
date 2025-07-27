@@ -12,7 +12,7 @@
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
-#define KILO_VERSION "0.0.1"
+#define LIBRA_VERSION "0.0.1"
 
 enum editorKey {
     ARROW_LEFT = 1000,
@@ -188,7 +188,7 @@ void editorDrawRows(struct abuf *ab) {
 	if (y == E.screenrows / 3) {
 	    char welcome[80];
 	    int welcomelen = snprintf(welcome, sizeof(welcome),
-		    "Kilo editor -- version %s", KILO_VERSION);
+		    "Libra editor -- version %s", LIBRA_VERSION);
 	    if (welcomelen > E.screencols) welcomelen = E.screencols;
 	    int padding = (E.screencols - welcomelen) / 2;
 	    if (padding){
